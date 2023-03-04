@@ -23,6 +23,8 @@ class UserInterface:
         self.computerMove = ""
         self.playerColor = ""
         self.computerColor = ""
+        self.difficulty = "" 
+
     def drawComponent(self):
         '''
         Draw component draws elements including the game board, chess chessPieces
@@ -220,6 +222,21 @@ class UserInterface:
             print("White's Turn")
         else:
             print("Black's Turn")
+    
+    def setDifficulty(self):
+        '''
+        Function for setting the difficulty of the computer
+        '''
+        self.difficulty = input("Select Difficulty (E/M/H): ")
+        if self.difficulty == "E":
+            self.chessboard.MAXDEPTH = 2
+        elif self.difficulty == "M":
+            self.chessboard.MAXDEPTH = 4
+        elif self.difficulty == "H":
+            self.chessboard.MAXDEPTH = 6
+        else:
+            print("Invalid Difficulty")
+            self.setDifficulty()
 
     def playGame(self):
         '''
@@ -228,6 +245,7 @@ class UserInterface:
         '''
         self.surface.fill((0, 0, 0))
         while(self.playerColor != "W" and self.playerColor != "B"):
+            self.difficulty = input("Select Difficulty (E/M/H): ")
             self.playerColor = input("Select Color (W/B): ")
         self.drawComponent()
         if self.playerColor == "W":

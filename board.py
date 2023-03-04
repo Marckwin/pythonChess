@@ -26,7 +26,7 @@ class ChessBoard:
         self.TOTALPIECES = 64
         self.kingPosition_White = 60
         self.kingPosition_Black = 4
-        self.MAXDEPTH = 3
+        self.MAXDEPTH = 1
     def generateMoveList(self):
         """
         Description: Evalutates the entire board and will return a list of all possible
@@ -172,21 +172,6 @@ class ChessBoard:
             if self.boardArray[int(givenMove[0])][int(givenMove[1])] == "A":
                 self.kingPosition_White = 8*int(givenMove[0])+int(givenMove[1])
     def alphaBeta(self, depth, beta, alpha, givenMove, maxPlayer):
-        """
-        Description: a search algorithm function based off the known alphaBeta pruning
-        algorithm (https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning)
-        This algorithm is meant to find the best potential move the computer player can make
-        For more information on the algorithm: http://web.cs.ucla.edu/~rosen/161/notes/alphabeta.html
-        Args:
-                depth: How deep are we evaluating the tree (MAXDEPTH is 3 which is the deepest function will go to)
-                Beta: is the minimum upper bound of possible solutions
-                Alpha: is the maximum lower bound of possible solutions
-                givenMove: is the move we are evaluating for rating
-                maxPlayer: represented as either a 0 or 1 : the main idea is for a two-maxPlayer game,
-                there are two kinds of nodes: nodes representing our moves and nodes representing our opponent's (The computer) moves.
-        Returns: the optimal move with it's rating, represented in the form [move][score] (refer to findMoveSet for move format
-                 The optimal rating will be alpha <= rating <= beta
-        """
         moveslist = self.generateMoveList()
         ratingE = Ratings(self)
         if depth == 0 or len(moveslist) == 0:
@@ -221,19 +206,8 @@ class ChessBoard:
             return givenMove + str(beta)
         else:
             return givenMove + str(alpha)
+
     def changePerspective(self):
-        """
-        Function to switch the point of view of the chessboard.
-        Will switch maxPlayer's peices to opponent's chessPieces
-        IMPORTANT NOTE: Don't think of this function as a visual flip of a Board
-        but rather a change of perspective
-        Example:
-        Board is in Player's perspective
-        call changePerspective
-        Board is in opponent's perspective
-        call call changePerspective
-        Board is again in Player's perspective
-        """
         for index in range(32):
             row = index//8
             column = index % 8

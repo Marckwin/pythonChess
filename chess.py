@@ -1,7 +1,4 @@
 """
-CMPUT 275 Final Project: pyChess
-Mohammad Kebbi; 1496572
-Sheetal Gour; 1547017
 Main Functon that initializes the User Interface class to run the chess
 Game on pygame
 """

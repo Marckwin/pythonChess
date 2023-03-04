@@ -1,93 +1,110 @@
-class Peices:
+class Piece:
     """
-    Creation of abstract Peices class, for each individual peice to inherit
-    the chessboard class, as well as their own respective findMoveSet method
+    Creation of abstract Piece class, for each individual piece to inherit
+    the chessboard class, as well as their own respective find_move_set method
     """
-    def __init__(self, Board):
-        self.chessboard = Board
-    def findMoveSet(self, index):
+    def __init__(self, board):
+        self.chessboard = board
+
+    def find_move_set(self, index):
         """
-        This will be the abstract function that all peices has to evaluate what moves
-        can be made by that respective peice
+        This will be the abstract function that all pieces has to evaluate what moves
+        can be made by that respective piece
         """
         pass
-class Rook(Peices):
+class Rook(Piece):
     """
-    Inherited peice class of the rook. This class includes all the methods
+    Inherited piece class of the rook. This class includes all the methods
     used to evaluate all the moves that can be made by the rook
     """
-    def testCastling(self, row, column, i, board_roamer):
+    def test_castling(self, row, column, i, board_roamer):
         """
         Helper function to check if rook can perform the special castling move
         """
         castling = ""
         if row == 7:
             if column == 0 or column == 7:
-                if self.chessboard.boardArray[row][column+board_roamer*i] == "A":
-                    previousPosition = self.chessboard.boardArray[row][column+board_roamer*i]
-                    self.chessboard.boardArray[row][column] = "A"
-                    self.chessboard.boardArray[row][column+board_roamer*i] = "R"
-                    if self.chessboard.kingissafe() and (column+board_roamer*i) >= 0:
+                board_array = self.chessboard.boardArray
+                if board_array[row][column+board_roamer*i] == "A":
+                    previous_position = board_array[row][column+board_roamer*i]
+                    board_array[row][column] = "A"
+                    board_array[row][column+board_roamer*i] = "R"
+                    if self.chessboard.king_is_safe() and (column+board_roamer*i) >= 0:
                         if column == 0:
                             castling += str(column)+str(column+board_roamer*i-1) + str(column+board_roamer*i)+"R"+"C"
                         elif column == 7:
                                 castling += str(column)+ str(column+board_roamer*i+1) + str(column+board_roamer*i)+"R"+"C"
-                    self.chessboard.boardArray[row][column] = "R"
-                    self.chessboard.boardArray[row][column+board_roamer*i] = previousPosition
+                    board_array[row][column] = "R"
+                    board_array[row][column+board_roamer*i] = previous_position
         return castling
-    def testHorizontal(self, row, column, i, movelist):
+    def testMove(self, row, col, row_offset, col_offset, piece, movelist):
+        """
+        Helper function to test if a move is valid
+        """
+        board_size = len(self.chessboard.boardArray)
+        new_row = row + row_offset
+        new_col = col + col_offset
+        if new_row < 0 or new_col < 0 or new_row >= board_size or new_col >= board_size:
+            return movelist
+        dest_piece = self.chessboard.boardArray[new_row][new_col]
+        if dest_piece == " ":
+            self.chessboard.boardArray[row][col] = " "
+            self.chessboard.boardArray[new_row][new_col] = piece
+            if self.chessboard.kingissafe():
+                movelist += str(row) + str(col) + str(new_row) + str(new_col) + " "
+            self.chessboard.boardArray[row][col] = piece
+            self.chessboard.boardArray[new_row][new_col] = dest_piece
+        elif dest_piece.islower():
+            self.chessboard.boardArray[row][col] = " "
+            self.chessboard.boardArray[new_row][new_col] = piece
+            if self.chessboard.kingissafe():
+                movelist += str(row) + str(col) + str(new_row) + str(new_col) + dest_piece
+            self.chessboard.boardArray[row][col] = piece
+            self.chessboard.boardArray[new_row][new_col] = dest_piece
+        return movelist
+
+
+    def testHorizontal(self, row, col, movelist):
         """
         Helper function to check if horizontal move is valid
         """
-        board_roamer = 1
-        try:
-            while(self.chessboard.boardArray[row][column+board_roamer*i] == " "):
-                previousPosition = self.chessboard.boardArray[row][column+board_roamer*i]
-                self.chessboard.boardArray[row][column] = " "
-                self.chessboard.boardArray[row][column+board_roamer*i] = "R"
-                if self.chessboard.kingissafe() and column+board_roamer*i >= 0:
-                    movelist += str(row) + str(column) + str(row) +str(column + board_roamer*i) + str(previousPosition)
-                self.chessboard.boardArray[row][column] = "R"
-                self.chessboard.boardArray[row][column+board_roamer*i] = previousPosition
-                board_roamer += 1
-            if self.chessboard.boardArray[row][column+board_roamer*i].islower():
-                previousPosition = self.chessboard.boardArray[row][column+board_roamer*i]
-                self.chessboard.boardArray[row][column] = " "
-                self.chessboard.boardArray[row][column+board_roamer*i] = "R"
-                if self.chessboard.kingissafe() and column+board_roamer*i >= 0:
-                    movelist += str(row) + str(column) + str(row) +str(column + board_roamer*i)+str(previousPosition)
-                self.chessboard.boardArray[row][column] = "R"
-                self.chessboard.boardArray[row][column+board_roamer*i] = previousPosition
-            movelist += self.testCastling(row, column, i, board_roamer)
-        except IndexError:
-            pass
+        board_size = len(self.chessboard.boardArray)
+        for col_offset in [-1, 1]:
+            for i in range(1, board_size):
+                new_col = col + i * col_offset
+                if new_col < 0 or new_col >= board_size:
+                    break
+                dest_piece = self.chessboard.boardArray[row][new_col]
+                if dest_piece == " ":
+                    movelist = self.testMove(row, col, 0, i*col_offset, "R", movelist)
+                elif dest_piece.islower():
+                    movelist = self.testMove(row, col, 0, i*col_offset, "R", movelist)
+                    break
+                else:
+                    break
         return movelist
-    def testVertical(self, row, column, i, movelist):
+
+    def testVertical(self, row, col, movelist):
         """
         Helper function to check if vertical move is valid
         """
-        board_roamer = 1
-        try:
-            while(self.chessboard.boardArray[row+board_roamer*i][column] == " "):
-                previousPosition = self.chessboard.boardArray[row+board_roamer*i][column]
-                self.chessboard.boardArray[row][column] = " "
-                self.chessboard.boardArray[row+board_roamer*i][column] = "R"
-                if self.chessboard.kingissafe() and (row+board_roamer*i) >=0:
-                    movelist += str(row) + str(column) + str(row+board_roamer*i) + str(column) + str(previousPosition)
-                self.chessboard.boardArray[row][column] = "R"
-                self.chessboard.boardArray[row+board_roamer*i][column] = previousPosition
-                board_roamer += 1
-            if self.chessboard.boardArray[row+board_roamer*i][column].islower():
-                previousPosition = self.chessboard.boardArray[row+board_roamer*i][column]
-                self.chessboard.boardArray[row][column] = " "
-                self.chessboard.boardArray[row+board_roamer*i][column] = "R"
-                if self.chessboard.kingissafe() and (row+board_roamer*i) >= 0:
-                    movelist += str(row) + str(column) + str(row+board_roamer*i) + str(column) + str(previousPosition)
-                self.chessboard.boardArray[row][column] = "R"
-                self.chessboard.boardArray[row+board_roamer*i][column] = previousPosition
-        except IndexError:
-            pass
+        board_size = len(self.chessboard.boardArray)
+        for row_offset in [-1, 1]:
+            for i in range(1, board_size):
+                new_row = row + i * row_offset
+                if new_row < 0 or new_row >= board_size:
+                    break
+                dest_piece = self.chessboard.boardArray[new_row][col]
+                if dest_piece == " ":
+                    movelist = self.testMove(row, col, i*row_offset, 0, "R", movelist)
+                elif dest_piece.islower():
+                    movelist = self.testMove(row, col, i*row_offset, 0, "R", movelist)
+                    break
+                else:
+                    break
         return movelist
+
+
     def findMoveSet(self, index):
         """
         Goes through the potential moves a rook can make and if it's a safe move
@@ -99,10 +116,13 @@ class Rook(Peices):
         row = index//8
         column = index % 8
         for i in range(-1, 2, 2):
-            movelist = self.testVertical(row, column, i, movelist)
-            movelist = self.testHorizontal(row, column, i, movelist)
+            movelist = self.testVertical(row, column, movelist)
+            movelist = self.testHorizontal(row, column, movelist)
         return movelist
-class Knight(Peices):
+
+import itertools
+
+class Knight(Piece):
     """
     Inherited peice class of the knight. This class includes all the methods
     used to evaluate all the moves that can be made by the knight
@@ -114,7 +134,7 @@ class Knight(Peices):
         Args: index: Current position of the board we are evaluating
         Returns: Move set of all potential moves knight can make
         """
-        movelist = ""
+        movelist = []
         row = index//8
         column = index % 8
         for i in range(-1, 2, 2):
@@ -125,7 +145,7 @@ class Knight(Peices):
                         self.chessboard.boardArray[row][column] = " "
                         self.chessboard.boardArray[row+i][column+j*2] = "K"
                         if self.chessboard.kingissafe()and row+i >= 0 and column+j*2 >= 0:
-                            movelist += str(row)+str(column) + str(row+i) + str(column+j*2) + str(previousPosition)
+                            movelist.append(str(row)+str(column) + str(row+i) + str(column+j*2) + str(previousPosition))
                         self.chessboard.boardArray[row][column] = "K"
                         self.chessboard.boardArray[row+i][column+j*2] = previousPosition
                 except IndexError:
@@ -136,13 +156,15 @@ class Knight(Peices):
                         self.chessboard.boardArray[row][column] = " "
                         self.chessboard.boardArray[row+i*2][column+j] = "K"
                         if self.chessboard.kingissafe() and row+i*2 >= 0 and column+j >=0:
-                            movelist += str(row)+str(column) + str(row+i*2) + str(column+j) + str(previousPosition)
+                            movelist.append(str(row)+str(column) + str(row+i*2) + str(column+j) + str(previousPosition))
                         self.chessboard.boardArray[row][column] = "K"
                         self.chessboard.boardArray[row+i*2][column+j] = previousPosition
                 except IndexError:
                     pass
-        return movelist
-class Bishop(Peices):
+        return ''.join(movelist)
+
+
+class Bishop(Piece):
     """
     Inherited peice class of the Bishop. This class includes all the methods
     used to evaluate all the moves that can be made by the Bishop
@@ -187,7 +209,7 @@ class Bishop(Peices):
             for j in range(-1, 2,2):
                 movelist = self.checkDiagonal(movelist, row, column, i, j)
         return movelist
-class Queen(Peices):
+class Queen(Piece):
     """
     Inherited peice class of the Queen. This class includes all the methods
     used to evaluate all the moves that can be made by the Queen
@@ -230,7 +252,7 @@ class Queen(Peices):
                 if i != 0 or j != 0:
                     movelist = self.testMovement(row, column, i, j, movelist)
         return movelist
-class King(Peices):
+class King(Piece):
     """
     Inherited peice class of the king. This class includes all the methods
     used to evaluate all the moves that can be made by the king
@@ -265,7 +287,7 @@ class King(Peices):
             if i != 4:
                 movelist = self.testMove(index, row, column, i, movelist)
         return movelist
-class Pawn(Peices):
+class Pawn(Piece):
     """
     Inherited peice class of the pawn. This class includes all the methods
     used to evaluate all the moves that can be made by the pawn
